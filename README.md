@@ -138,3 +138,130 @@ public partial class ReadXML : System.Web.UI.Page
     
     }
 }
+EtrackingWave.cs
+ [WebMethod]
+    public  List<wt_storeCurrentDayEntries> getStoreUserCurrentDayLatestEntry(string masterAccountStoreId, string storeUserId)
+    {
+        List<wt_storeCurrentDayEntries> wt_storeEmployeeEntryList=new List<wt_storeCurrentDayEntries>();
+        try
+        {
+            //  logger.InfoFormat("insertStoreUserCurrentDayEntry called with for user:{0} and storeid:{1}",storeUserId, masterAccountStoreId,);
+            wt_storeEmployeeEntryList = EtrackingWaveHelper.getStoreUserCurrentDayLatestEntry(masterAccountStoreId, storeUserId);
+        
+        }
+        catch (Exception ex)
+        {
+            // logger.Error(ex.Message);
+        }
+        return wt_storeEmployeeEntryList;
+
+    }
+
+EtrackingWaveHelper
+ public static List<wt_storeCurrentDayEntries> getStoreUserCurrentDayLatestEntry(string masterAccountstoreId, string storeUserId)
+    {
+
+        string connectionSting = ConfigurationManager.ConnectionStrings["VrindiAttendance"].ConnectionString;
+        List<wt_storeCurrentDayEntries> wt_storeEmployeeEntryList = new List<wt_storeCurrentDayEntries>();
+                 
+        using (SqlConnection con = new SqlConnection(connectionSting))
+        {
+            using (SqlCommand cmd = new SqlCommand("sp_get_StoreUserCurrentDayEntry"))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@MasterAccountStoreID", new Guid(masterAccountstoreId));
+                //cmd.Parameters.AddWithValue("@StoreUserId", new Guid(storeUserId));
+                cmd.Parameters.AddWithValue("@StoreUserId", new Guid("0cc13e30-9e19-4d8a-8597-0a86a57d62b9"));
+
+                cmd.Connection = con;
+                con.Open();
+
+                SqlDataReader idr = cmd.ExecuteReader();
+                while (idr.Read())
+                {
+                    wt_storeCurrentDayEntries wt_storeEmployeeEntry = new wt_storeCurrentDayEntries();
+                    if (idr["EntryType"] != DBNull.Value)
+                    {
+                        wt_storeEmployeeEntry.EntryType = Convert.ToString(idr["EntryType"]);
+                    
+                    if (idr["EntryDateTime"] != DBNull.Value)
+                    {
+                        wt_storeEmployeeEntry.EntryDateTime = Convert.ToDateTime(idr["EntryDateTime"]);
+                    }
+                     
+
+                    wt_storeEmployeeEntryList.Add(wt_storeEmployeeEntry);
+                }
+               
+            }
+        }
+            con.Close();
+    }
+        return wt_storeEmployeeEntryList;
+    }
+
+WT_storeEmployee.cs
+ public class wt_storeCurrentDayEntries
+    {
+        public wt_storeCurrentDayEntries()
+        {
+
+        }
+        public string EntryType { get; set; }
+        public DateTime?  EntryDateTime { get; set; }
+        
+
+
+    }
+
+in MarkEntries.js
+in inti()  ,onGetCurrentDayStoreUserEntry();
+after init();
+  var onGetCurrentDayStoreUserEntry = function () {
+            var ajaxURL = app.helper.ETrackingWaveApiURL("getStoreUserCurrentDayLatestEntry");
+            try {
+                $.ajax({
+                    url: ajaxURL,
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    crossDomain: true,
+                    data: "{masterAccountStoreId:'" + $storeId + "',storeUserId:'" + $storeEmployeeId + "'}",
+                    success: function (result) {
+                        app.mobileApp.hideLoading();
+                        alert(result.e);
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        app.mobileApp.hideLoading();
+                        app.showError("Please check your network connection.")
+                    }
+                });
+            }
+            catch (ex) {
+                app.mobileApp.hideLoading();
+                console.log(ex.toString());
+            }
+        };
+     
+
+
+in Return
+ onGetCurrentDayStoreUserEntry: onGetCurrentDayStoreUserEntry
+
+
+sp
+-- =============================================
+-- Author:		Pankaj
+-- Create date: 2012-01-13
+-- Description: Fetches latest consumer info from all the orders made.
+-- =============================================
+CREATE PROCEDURE [dbo].sp_get_StoreUserCurrentDayEntry
+     @MasterAccountStoreID uniqueidentifier
+	,@StoreUserId uniqueidentifier
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
+	--SET NOCOUNT ON;
+	
+	Select entryType,entryDateTime from  wt_Store_User_Entry where Day(entryDateTime)=Day(GETDATE()) and MONTH(entryDateTime)=MONTH(GETDATE()) and Year(entryDateTime)=Year(GETDATE()) and store_id=@MasterAccountStoreID and user_id=@StoreUserId order by ins_upd_datetime desc,entryDateTime desc
+END
