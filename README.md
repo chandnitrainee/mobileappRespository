@@ -1,223 +1,122 @@
-# mobileappRespository
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.UI;
-using System.Web.UI.WebControls;
-using System.Xml;
-using System.Reflection;
-using Microsoft.Office.Interop.Excel;
-public partial class ReadXML : System.Web.UI.Page
-{
-    public class userInfo{
-        public string UserId { get; set; }
-        public string RestaurantName { get; set; }
-        public string DemoRunCount { get; set; }
-        public string DemoName { get; set; }
-        public string ClientURLAddress { get; set; }
-        public string CustomerName { get; set; }
-        public string PrimaryPhoneNo { get; set; }
-        public string MobileNo { get; set; }
-        public string Street { get; set; }
-        public string City { get; set; }
-        public string Region { get; set; }
-        public string Regioncode { get; set; }
-        public string Country { get; set; }
-        public string CountryCode { get; set; }
-        public string ZIP { get; set; }
-        public string FaxNo { get; set; }
-        public string UserEmail { get; set; }
-        public string DateTime { get; set; }
-    }
-    protected void Page_Load(object sender, EventArgs e)
-    {
+/**
+ * Login view model
+ */
 
-    }
-    protected void btnReadXML_Click(object sender, EventArgs e)
-    {
-        XmlDocument xDoc = new XmlDocument();
-        xDoc.Load(HttpContext.Current.Server.MapPath("~/data/userinfo.xml"));
+var app = app || {};
 
-        List<userInfo> userInfoCollection = new List<userInfo>();
-        XmlNodeList xmlUserNodes = xDoc.SelectNodes("DemoUserInformations/User");
-
-        foreach (XmlNode xmlNode in xmlUserNodes)
-        {
-            userInfo uinfo = new userInfo();
-            if(xmlNode.Attributes["id"]!=null)
-            uinfo.UserId = xmlNode.Attributes["id"].Value;
-            if (xmlNode.Attributes["RName"] != null)
-                uinfo.RestaurantName = xmlNode.Attributes["RName"].Value;
-            if (xmlNode.Attributes["Demoruncount"] != null)
-                uinfo.DemoRunCount = xmlNode.Attributes["Demoruncount"].Value;
-            if (xmlNode.Attributes["DemoName"] != null)
-                uinfo.DemoName = xmlNode.Attributes["DemoName"].Value;
-            if(xmlNode.SelectSingleNode("ClientURLAddress")!=null)
-             uinfo.ClientURLAddress =xmlNode.SelectSingleNode("ClientURLAddress").InnerText;
-            if (xmlNode.SelectSingleNode("CName") != null)
-                uinfo.CustomerName = xmlNode.SelectSingleNode("CName").InnerText;
-            if (xmlNode.SelectSingleNode("Phno") != null)
-                uinfo.PrimaryPhoneNo = xmlNode.SelectSingleNode("Phno").InnerText;
-            if (xmlNode.SelectSingleNode("Mobno") != null)
-                uinfo.MobileNo = xmlNode.SelectSingleNode("Mobno").InnerText;
-
-            if (xmlNode.SelectSingleNode("Address/Street") != null)
-                uinfo.Street = xmlNode.SelectSingleNode("Address/Street").InnerText;
-            if (xmlNode.SelectSingleNode("Address/City") != null)
-                uinfo.City = xmlNode.SelectSingleNode("Address/City").InnerText;
-            if (xmlNode.SelectSingleNode("Address/Region") != null)
-            {
-                uinfo.Region = xmlNode.SelectSingleNode("Address/Region").InnerText;
-                if (xmlNode.SelectSingleNode("Address/Region").Attributes["code"] != null)
-                {
-                    uinfo.Regioncode = xmlNode.SelectSingleNode("Address/Region").Attributes["code"].Value;
-
-                }
-            }
-            if (xmlNode.SelectSingleNode("Address/Country") != null)
-            {
-                uinfo.Country = xmlNode.SelectSingleNode("Address/Country").InnerText;
-                if (xmlNode.SelectSingleNode("Address/Country").Attributes["code"] != null)
-                {
-                    uinfo.CountryCode = xmlNode.SelectSingleNode("Address/Country").Attributes["code"].Value;
-
-                }
-             }
-            if (xmlNode.SelectSingleNode("Address/ZIP") != null)
-                uinfo.ZIP = xmlNode.SelectSingleNode("Address/ZIP").InnerText;
-
-            if (xmlNode.SelectSingleNode("FaxNo") != null)
-                uinfo.FaxNo = xmlNode.SelectSingleNode("Address/ZIP").InnerText;
-            if (xmlNode.SelectSingleNode("Email") != null)
-                uinfo.UserEmail = xmlNode.SelectSingleNode("Email").InnerText;
-            if (xmlNode.SelectSingleNode("DateTime") != null)
-                uinfo.DateTime = xmlNode.SelectSingleNode("DateTime").InnerText;
-            if (xmlNode.SelectSingleNode("Address/ZIP") != null)
-                uinfo.ZIP = xmlNode.SelectSingleNode("Address/ZIP").InnerText;
-
-            userInfoCollection.Add(uinfo);
-        }
-        
-    }
-
-    public void createExcelFile()
-    {
-         Microsoft.Office.Interop.Excel.Application xlApp = new Microsoft.Office.Interop.Excel.Application();
-
-        if (xlApp == null)
-        {
-            Console.WriteLine("EXCEL could not be started. Check that your office installation and project references are correct.");
-            return;
-        }
-        xlApp.Visible = true;
-
-        Workbook wb = xlApp.Workbooks.Add(XlWBATemplate.xlWBATWorksheet);
-        Worksheet ws = (Worksheet)wb.Worksheets[1];
-
-        if (ws == null)
-        {
-            Console.WriteLine("Worksheet could not be created. Check that your office installation and project references are correct.");
-        }
-
-        // Select the Excel cells, in the range c1 to c7 in the worksheet.
-        Range aRange = ws.get_Range("C1", "C7");
-
-        if (aRange == null)
-        {
-            Console.WriteLine("Could not get a range. Check to be sure you have the correct versions of the office DLLs.");
-        }
-
-        // Fill the cells in the C1 to C7 range of the worksheet with the number 6.
-        Object[] args = new Object[1];
-        args[0] = 6;
-        aRange.GetType().InvokeMember("Value", BindingFlags.SetProperty, null, aRange, args);
+app.MarkUserEntry = (function () {
+    'use strict';
+    var $storeEmployeeId, $storeId, $breakEntryDescription, $breakEntryType;
     
-        // Change the cells in the C1 to C7 range of the worksheet to the number 8.
-        aRange.Value2 = 8;
-    
-    }
-}
-EtrackingWave.cs
- [WebMethod]
-    public  List<wt_storeCurrentDayEntries> getStoreUserCurrentDayLatestEntry(string masterAccountStoreId, string storeUserId)
-    {
-        List<wt_storeCurrentDayEntries> wt_storeEmployeeEntryList=new List<wt_storeCurrentDayEntries>();
-        try
-        {
-            //  logger.InfoFormat("insertStoreUserCurrentDayEntry called with for user:{0} and storeid:{1}",storeUserId, masterAccountStoreId,);
-            wt_storeEmployeeEntryList = EtrackingWaveHelper.getStoreUserCurrentDayLatestEntry(masterAccountStoreId, storeUserId);
-        
-        }
-        catch (Exception ex)
-        {
-            // logger.Error(ex.Message);
-        }
-        return wt_storeEmployeeEntryList;
 
-    }
-
-EtrackingWaveHelper
- public static List<wt_storeCurrentDayEntries> getStoreUserCurrentDayLatestEntry(string masterAccountstoreId, string storeUserId)
-    {
-
-        string connectionSting = ConfigurationManager.ConnectionStrings["VrindiAttendance"].ConnectionString;
-        List<wt_storeCurrentDayEntries> wt_storeEmployeeEntryList = new List<wt_storeCurrentDayEntries>();
-                 
-        using (SqlConnection con = new SqlConnection(connectionSting))
-        {
-            using (SqlCommand cmd = new SqlCommand("sp_get_StoreUserCurrentDayEntry"))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@MasterAccountStoreID", new Guid(masterAccountstoreId));
-                //cmd.Parameters.AddWithValue("@StoreUserId", new Guid(storeUserId));
-                cmd.Parameters.AddWithValue("@StoreUserId", new Guid("0cc13e30-9e19-4d8a-8597-0a86a57d62b9"));
-
-                cmd.Connection = con;
-                con.Open();
-
-                SqlDataReader idr = cmd.ExecuteReader();
-                while (idr.Read())
-                {
-                    wt_storeCurrentDayEntries wt_storeEmployeeEntry = new wt_storeCurrentDayEntries();
-                    if (idr["EntryType"] != DBNull.Value)
-                    {
-                        wt_storeEmployeeEntry.EntryType = Convert.ToString(idr["EntryType"]);
-                    
-                    if (idr["EntryDateTime"] != DBNull.Value)
-                    {
-                        wt_storeEmployeeEntry.EntryDateTime = Convert.ToDateTime(idr["EntryDateTime"]);
-                    }
-                     
-
-                    wt_storeEmployeeEntryList.Add(wt_storeEmployeeEntry);
-                }
-               
+    var storeInfoUserKendoDataSource = new kendo.data.DataSource({
+        schema: {
+            data: "d" //Specify how to get the result.
+        },
+        transport: {
+            read: {
+                url: app.helper.ETrackingWaveApiURL("getStoreEmployeeInfo"),
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                crossDomain: true,
+            },
+            parameterMap: function () {
+                return kendo.stringify({ masterAccountstoreId: kendo.toString($storeId), storeUserEmailId: kendo.toString($storeEmployeeId) });
             }
-        }
-            con.Close();
-    }
-        return wt_storeEmployeeEntryList;
-    }
+        },
+        serverFiltering: true,
+        change: function (e) {
 
-WT_storeEmployee.cs
- public class wt_storeCurrentDayEntries
-    {
-        public wt_storeCurrentDayEntries()
-        {
-
-        }
-        public string EntryType { get; set; }
-        public DateTime?  EntryDateTime { get; set; }
+        },
         
+    });
 
-
+    function setEntryButtons(lastEntryType) {
+        alert(lastEntryType);
+        if (lastEntryType == "BE") {
+            MarkEntryViewModel.showBreakBeginEntryButton = false;
+            MarkEntryViewModel.showBreakEndEntryButton = true;
+            MarkEntryViewModel.showDayBeginEntryButton = false;
+            MarkEntryViewModel.showDayEndEntryButton = true;
+        //    document.getElementById("btnDayBegin").("class", "hideEntryButtons");
+        //    document.getElementById("btnBreakBegin").setAttribute("class", "hideEntryButtons");
+        //    document.getElementById("btnBreakEnd").setAttribute("class", "showEntryButtons");
+        //    document.getElementById("btnDayEnd").setAttribute("class", "hideEntryButtons");
+        }
+        else if (lastEntryType == "DB") {
+            MarkEntryViewModel.showBreakBeginEntryButton = true;
+            MarkEntryViewModel.showBreakEndEntryButton = false;
+            MarkEntryViewModel.showDayBeginEntryButton = true;
+            MarkEntryViewModel.showDayEndEntryButton = true;
+            //document.getElementById("btnDayBegin").setAttribute("class", "showEntryButtons");
+            //document.getElementById("btnBreakBegin").setAttribute("class", "hideEntryButtons");
+            //document.getElementById("btnBreakEnd").setAttribute("class", "hideEntryButtons");
+            //document.getElementById("btnDayEnd").setAttribute("class", "hideEntryButtons");
+        }
+        else if (lastEntryType == "DE") {
+            MarkEntryViewModel.showBreakBeginEntryButton = false;
+            MarkEntryViewModel.showBreakEndEntryButton = false;
+            MarkEntryViewModel.showDayBeginEntryButton = false;
+            MarkEntryViewModel.showDayEndEntryButton = false;
+            //document.getElementById("btnDayBegin").setAttribute("class", "hideEntryButtons");
+            //document.getElementById("btnBreakBegin").setAttribute("class", "hideEntryButtons");
+            //document.getElementById("btnBreakEnd").setAttribute("class", "hideEntryButtons");
+            //document.getElementById("btnDayEnd").setAttribute("class", "hideEntryButtons");
+        }
+        else if (lastEntryType == "BEnd") {
+            MarkEntryViewModel.showBreakBeginEntryButton = true;
+            MarkEntryViewModel.showBreakEndEntryButton = false;
+            MarkEntryViewModel.showDayBeginEntryButton = false;
+            MarkEntryViewModel.showDayEndEntryButton = true;
+            //document.getElementById("btnDayBegin").setAttribute("class", "hideEntryButtons");
+            //document.getElementById("btnBreakBegin").setAttribute("class", "showEntryButtons");
+            //document.getElementById("btnBreakEnd").setAttribute("class", "hideEntryButtons");
+            //document.getElementById("btnDayEnd").setAttribute("class", "showEntryButtons");
+        }
     }
 
-in MarkEntries.js
-in inti()  ,onGetCurrentDayStoreUserEntry();
-after init();
-  var onGetCurrentDayStoreUserEntry = function () {
+    var MarkEntryViewModel = (function () {
+
+        var showDayBeginEntryButton = true;
+        var showDayEndEntryButton = true;
+        var showBreakBeginEntryButton = true;
+        var showBreakEndEntryButton = true;
+        var onBreakLunchEntryType = function () {
+            $breakEntryType = "Lunch";
+            onMarkBreakEntry();
+        }
+        var onBreakOfficeEntryType = function () {
+            $breakEntryType = "Office Work";
+            onMarkBreakEntry();
+        }
+        var onBreakPersonalEntryType = function () {
+            $breakEntryType = "Personal";
+            onMarkBreakEntry();
+        }
+        var init = function (e) {
+            var p = e.view.params;
+            $storeEmployeeId = p.storeEmployeeId;
+            var masterAccountObjInfo = JSON.parse(app.helper.readObjectFromLocalStorage("accountStoreInfoDatasource"));
+            $storeId = masterAccountObjInfo.storeId;
+            onGetCurrentDayStoreUserEntry();
+            //var datasourcedata = storeInfoUserKendoDataSource.read();
+            ////alert(datasourcedata.length);
+
+           
+            //storeInfoUserKendoDataSource.fetch();
+            //var datasourcedata = storeInfoUserKendoDataSource.data()
+
+            //for (var i = 0; i < datasourcedata.length; i++) {
+            //    var dataitem = datasourcedata[i].user_fullname;
+            //    alert(dataitem);
+            //}
+          //  console.log(storeInfoUserKendoDataSource.data.toString());
+          //  localStorage.setItem('speakerData', storeInfoUserKendoDataSource.data);
+          //  app.helper.writeObjectIntoLocalStorage("aaa", storeInfoUserKendoDataSource.data);
+        };
+        var onGetCurrentDayStoreUserEntry = function () {
+            var lastEntryType;
             var ajaxURL = app.helper.ETrackingWaveApiURL("getStoreUserCurrentDayLatestEntry");
             try {
                 $.ajax({
@@ -229,7 +128,41 @@ after init();
                     data: "{masterAccountStoreId:'" + $storeId + "',storeUserId:'" + $storeEmployeeId + "'}",
                     success: function (result) {
                         app.mobileApp.hideLoading();
-                        alert(result.e);
+                        if (result != null && result.d != null) {
+                            lastEntryType = result.d[0].EntryType
+                        }
+                        else
+                        {
+                            lastEntryType = "BD";
+                        }
+                        setEntryButtons(lastEntryType);
+
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        app.mobileApp.hideLoading();
+                        app.showError("Please check your network connection.")
+                    }
+                });
+            }
+            catch (ex) {
+                app.mobileApp.hideLoading();
+                app.showError("Please check your network connection.")
+                console.log(ex.toString());
+            }
+        };
+        var onMarkDayBeginEntry = function () {
+           var ajaxURL = app.helper.ETrackingWaveApiURL("insertStoreUserCurrentDayEntry");
+            try {
+                $.ajax({
+                    url: ajaxURL,
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    crossDomain: true,
+                    data: "{masterAccountStoreId:'" + $storeId + "',storeUserId:'" + $storeEmployeeId + "',entryType:'" + "DB" + "',entryDescription:'" + "DayBeginEntry" + "'}",
+                    success: function (result) {
+                        app.mobileApp.hideLoading();
+                        alert("Entry Marked Successfully");
                     },
                     error: function (xhr, ajaxOptions, thrownError) {
                         app.mobileApp.hideLoading();
@@ -242,26 +175,166 @@ after init();
                 console.log(ex.toString());
             }
         };
-     
+        var onMarkBreakEntry = function () {
+            var ajaxURL = app.helper.ETrackingWaveApiURL("insertStoreUserCurrentDayEntry");
+            try {
+                $.ajax({
+                    url: ajaxURL,
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    crossDomain: true,
+                    data: "{masterAccountStoreId:'" + $storeId + "',storeUserId:'" + $storeEmployeeId + "',entryType:'" + "BE" + "',entryDescription:'" + $breakEntryType + "'}",
+                    success: function (result) {
+                        app.mobileApp.hideLoading();
+                        alert("Entry Marked Successfully");
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        app.mobileApp.hideLoading();
+                        app.showError("Please check your network connection.")
+                    }
+                });
+            }
+            catch (ex) {
+                app.mobileApp.hideLoading();
+                console.log(ex.toString());
+            }
+        };
+        var onMarkBreakEndEntry = function () {
+            var ajaxURL = app.helper.ETrackingWaveApiURL("insertStoreUserCurrentDayEntry");
+            try {
+                $.ajax({
+                    url: ajaxURL,
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    crossDomain: true,
+                    data: "{masterAccountStoreId:'" + $storeId + "',storeUserId:'" + $storeEmployeeId + "',entryType:'" + "BEnd" + "',entryDescription:'" + $breakEntryType + "'}",
+                    success: function (result) {
+                        app.mobileApp.hideLoading();
+                        alert("Entry Marked Successfully");
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        app.mobileApp.hideLoading();
+                        app.showError("Please check your network connection.")
+                    }
+                });
+            }
+            catch (ex) {
+                app.mobileApp.hideLoading();
+                console.log(ex.toString());
+            }
+        };
+        var onMarkEndDayEntry = function () {
+            var ajaxURL = app.helper.ETrackingWaveApiURL("insertStoreUserCurrentDayEntry");
+            try {
+                $.ajax({
+                    url: ajaxURL,
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    crossDomain: true,
+                    data: "{masterAccountStoreId:'" + $storeId + "',storeUserId:'" + $storeEmployeeId + "',entryType:'" + "DE" + "',entryDescription:'" + "DayEndEntry" + "'}",
+                    success: function (result) {
+                        app.mobileApp.hideLoading();
+                        alert("Entry Marked Successfully");
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        app.mobileApp.hideLoading();
+                        app.showError("Please check your network connection.")
+                    }
+                });
+            }
+            catch (ex) {
+                app.mobileApp.hideLoading();
+                console.log(ex.toString());
+            }
+        };
+        var show = function () {
+
+        };
+        var logout = function () {
+
+        };
+
+        return {
+            init: init,
+            show: show,
+            logout: logout,
+            onMarkDayBeginEntry: onMarkDayBeginEntry,
+            onMarkBreakEntry: onMarkBreakEntry,
+            onMarkEndDayEntry: onMarkEndDayEntry,
+            onBreakLunchEntryType: onBreakLunchEntryType,
+            onBreakPersonalEntryType: onBreakPersonalEntryType,
+            onBreakOfficeEntryType: onBreakOfficeEntryType,
+            onGetCurrentDayStoreUserEntry: onGetCurrentDayStoreUserEntry,
+            onMarkBreakEndEntry: onMarkBreakEndEntry,
+            showDayBeginEntryButton :showDayBeginEntryButton,
+            showDayEndEntryButton :showDayEndEntryButton,
+            showBreakBeginEntryButton :showBreakBeginEntryButton,
+            showBreakEndEntryButton :showBreakEndEntryButton
+        };
+
+    }());
+
+    return MarkEntryViewModel;
+
+}());
+<div data-role="view" data-title="ETracking Wave" data-layout="ETrackingWaveHomeLayout" data-model="app.MarkUserEntry" data-init="app.MarkUserEntry.init" data-show="app.MarkUserEntry.show">
+    <!--<header data-role="header">
+        <div data-role="navbar">
+           ETracking Wave - Mark Your Entries
+           <a class="nav-button" data-align="left" data-role="backbutton" data-click="app.accountDashboard.logout">Back</a>
+       </div>
+  </header>-->
+    <div class="controller-login">
+        <div class="login-logo wagebase"></div>
+        <form>
+            <div class="login-holder">
+                <div class="login-box">
+                    <div class="card-section">
+                        <label class="lblHeading" id="lblHeading">Make your Entry</label><br />
+                        <label class="lblHeading" id="lblDateTime"></label>
+                        <div class="form-joined">
+                            <div class="form-item icon">
+                                <div class="form-text large">
+                                    <div data-bind="visible: showDayBeginEntryButton">
+                                        <a id="btnDayBegin" data-role="button" class="button-kit xlarge green" data-bind="click: onMarkDayBeginEntry">Day Begin</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-item icon">
+                                <div class="form-text large">
+                                    <div data-bind="visible: showBreakBeginEntryButton">
+                                        <a id="btnBreakBegin" data-role="button"  href="#replyBreakEntryOptions" data-rel="actionsheet" class="button-kit xlarge green">Break</a>
+                                    </div>
+                                    <div data-bind="visible: showBreakEndEntryButton">
+                                        <a id="btnBreakEnd" data-role="button" data-bind="click: onMarkBreakEndEntry" class="hideEntryButtons button-kit xlarge green">Break End</a>
+                                    </div>
+                                </div>
+                                <div class="form-text large">
+                                    <ul data-role="actionsheet" id="replyBreakEntryOptions" data-cancel="Close">
+                                        <li><a data-action="app.MarkUserEntry.onBreakLunchEntryType">Lunch</a></li>
+                                        <li><a data-action="app.MarkUserEntry.onBreakPersonalEntryType">Personal</a></li>
+                                        <li><a data-action="app.MarkUserEntry.onBreakOfficeEntryType">Office Work</a></li>
+                                    </ul>
+                                </div>
+                            </div>
 
 
-in Return
- onGetCurrentDayStoreUserEntry: onGetCurrentDayStoreUserEntry
+                            <div class="form-item icon">
+                                <div class="form-text large">
+                                    <div data-bind="visible: showDayEndEntryButton">
+                                        <a id="btnDayEnd" data-role="button" class="button-kit xlarge green" data-bind="click: onMarkEndDayEntry">End of Day</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
 
+</div>
 
-sp
--- =============================================
--- Author:		Pankaj
--- Create date: 2012-01-13
--- Description: Fetches latest consumer info from all the orders made.
--- =============================================
-CREATE PROCEDURE [dbo].sp_get_StoreUserCurrentDayEntry
-     @MasterAccountStoreID uniqueidentifier
-	,@StoreUserId uniqueidentifier
-AS
-BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
-	--SET NOCOUNT ON;
-	
-	Select entryType,entryDateTime from  wt_Store_User_Entry where Day(entryDateTime)=Day(GETDATE()) and MONTH(entryDateTime)=MONTH(GETDATE()) and Year(entryDateTime)=Year(GETDATE()) and store_id=@MasterAccountStoreID and user_id=@StoreUserId order by ins_upd_datetime desc,entryDateTime desc
-END
