@@ -1,4 +1,118 @@
 /**
+ * Login view model
+ */
+
+var app = app || {};
+
+app.storeInfo = (function () {
+    'use strict';
+    //var ETrackingWaveApiURL = "http://etrackingwave.webondemo.com/ETrackingWaveApi/EtrackingWave.asmx/";
+  //  var ETrackingWaveApiURL = "ETrackingWaveApi/EtrackingWave.asmx/";
+
+    var storeInfoViewModel = (function () {
+
+        var $loginStoreUsername, $loginStoreUserFullName, $loginStoreUserId, $loginStorePassword;
+        var masterAccountStoreId;
+          
+        var init = function () {
+            //var p = e.view.params;
+           
+            //$loginStoreUserFullName = p.suname;
+            //$loginStoreUserId = p.suid;
+            //$('#storeUserTitle').html("Hello <strong>" + $loginStoreUserFullName+"</strong>,Enter Password");
+            //$loginStorePassword = $('#loginStorePassword');
+            ////alert($loginStoreUserFullName);
+            var masterAccountObjInfo = JSON.parse(app.helper.readObjectFromLocalStorage("accountStoreInfoDatasource"));
+            masterAccountStoreId = masterAccountObjInfo.storeId;
+            var isMasterAccountUserLoggedIn = app.helper.readFromLocalStorage("isMasterAccountUserLoggedIn");
+            if (isMasterAccountUserLoggedIn === null || isMasterAccountUserLoggedIn != "true" || masterAccountStoreId === null || masterAccountObjInfo === null) {
+                app.mobileApp.navigate("#ETrackingWaveHomeView");
+            }
+        };
+        var login = function () {
+            var password = $loginStorePassword.val();
+            app.mobileApp.showLoading();
+            if (password === "") {
+                // navigator.notification.alert("Both fields are required!",
+                //   function () { }, "Login failed", 'OK');
+                alert("Password is Required");
+                app.mobileApp.hideLoading();
+                return;
+            }
+            var ajaxURL = app.helper.ETrackingWaveApiURL("checkStoreUserAccount");
+            try {
+                $.ajax({
+                    url: ajaxURL,
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    crossDomain: true,
+                    data: "{storeUserId:'" + $loginStoreUserId + "',storeUserPassword:'" + password + "',masterAccountstoreId:'" + masterAccountStoreId + "'}",
+                    success: function (result) {
+                        if (result.d.toString() == "false") {
+                            app.mobileApp.hideLoading();
+                            alert("no user");
+                        }
+                        else if (result.d.toString() == "true") {
+                            app.mobileApp.hideLoading();
+                            alert("found user");
+                            app.mobileApp.navigate('\#views/MarkEntries.html?suid=' + $loginStoreUserId + '&suname=' + $loginStoreUserFullName);
+                        }
+                    },
+                    error: function () {
+                        app.showError(err.message);
+                    }
+                });
+            }
+            catch (ex) {
+                console.log(ex.toString());
+            }
+        };
+        
+        var show = function (e) {
+            var p = e.view.params;
+            $loginStorePassword = $('#loginStorePassword');
+            $loginStorePassword.val('');
+            $loginStoreUserFullName = p.suname;
+            $loginStoreUserId = p.suid;
+            $('#storeUserTitle').html("Hello <strong>" + $loginStoreUserFullName + "</strong>,Enter Password");
+            
+
+        };
+        var logout = function () {
+
+        };
+
+        var markEntrees = function () {
+            app.mobileApp.navigate('views/MarkEntries.html');
+        }
+        var viewStatus = function () {
+            app.mobileApp.navigate('views/ViewStatus.html');
+        }
+        var createEmployeeAccount = function () {
+            app.mobileApp.navigate('views/RegisterEmployees.html');
+        }
+        // Authenticate to use Backend Services as a particular user
+     
+        //console.log("datasource data:"+storeInfoUserKendoDataSource.data);
+        //console.log(storeInfoUserKendoDataSource);
+        //console.log("datasource data tot count:" + storeInfoUserKendoDataSource.data.length);
+        return {
+            init: init,
+            show: show,
+            markEntrees: markEntrees,
+            viewStatus: viewStatus,
+            createEmployeeAccount: createEmployeeAccount,
+            logout: logout,
+            login: login
+        };
+
+    }());
+
+    return storeInfoViewModel;
+
+}());
+/**
  * MarkUserEntry View Model
  */
 
@@ -7,32 +121,9 @@ var app = app || {};
 app.MarkUserEntry = (function () {
     'use strict';
 
-    var $storeEmployeeId, $storeId, $breakEntryDescription, $breakEntryType;
+    var $storeEmployeeId, $storeId, $breakEntryDescription, $breakEntryType, $loginStoreUsername;
     var $BreakBeginEntryButton, $BreakEndEntryButton, $DayBeginEntryButton, $DayEndEntryButton;
    
-    var storeInfoUserKendoDataSource = new kendo.data.DataSource({
-        schema: {
-            data: "d" //Specify how to get the result.
-        },
-        transport: {
-            read: {
-                url: app.helper.ETrackingWaveApiURL("getStoreEmployeeInfo"),
-                type: "POST",
-                contentType: "application/json; charset=utf-8",
-                dataType: "json",
-                crossDomain: true,
-            },
-            parameterMap: function () {
-                return kendo.stringify({ masterAccountstoreId: kendo.toString($storeId), storeUserEmailId: kendo.toString($storeEmployeeId) });
-            }
-        },
-        serverFiltering: true,
-        change: function (e) {
-
-        },
-        
-    });
-
     function setEntryButtons(lastEntryType) {
         //alert(lastEntryType);
         if (lastEntryType == "NE") {
@@ -86,6 +177,8 @@ app.MarkUserEntry = (function () {
 
             $($BreakEndEntryButton).removeClass("showEntryButtons");
             $($BreakEndEntryButton).addClass("hideEntryButtons");
+
+            $('#lblHeading').html("<strong>" + $loginStoreUsername + "</strong>, Thankyou for Marking all your entries of today");
            
             
         }
@@ -119,17 +212,9 @@ app.MarkUserEntry = (function () {
             $breakEntryType = "Personal";
             onMarkBreakEntry();
         }
-        var init = function (e) {
-            $BreakBeginEntryButton, $BreakEndEntryButton, $DayBeginEntryButton, $DayEndEntryButton;
-            $BreakEndEntryButton = $('#btnBreakEnd');
-            $BreakBeginEntryButton = $('#btnBreakBegin');
-            $DayBeginEntryButton = $('#btnDayBegin');
-            $DayEndEntryButton = $('#btnDayEnd');
-            var p = e.view.params;
-            $storeEmployeeId = p.storeEmployeeId;
-            var masterAccountObjInfo = JSON.parse(app.helper.readObjectFromLocalStorage("accountStoreInfoDatasource"));
-            $storeId = masterAccountObjInfo.storeId;
-            onGetCurrentDayStoreUserEntry();
+
+        var init = function (e) {           
+            //onGetCurrentDayStoreUserEntry();
         };
         var onGetCurrentDayStoreUserEntry = function () {
             app.mobileApp.showLoading();
@@ -355,8 +440,20 @@ app.MarkUserEntry = (function () {
                 console.log(ex.toString());
             }
         };
-        var show = function () {
+        var show = function (e) {
+            $BreakBeginEntryButton, $BreakEndEntryButton, $DayBeginEntryButton, $DayEndEntryButton;
+            $BreakEndEntryButton = $('#btnBreakEnd');
+            $BreakBeginEntryButton = $('#btnBreakBegin');
+            $DayBeginEntryButton = $('#btnDayBegin');
+            $DayEndEntryButton = $('#btnDayEnd');
+            var p = e.view.params;
+            $storeEmployeeId = p.suid;
+            $loginStoreUsername = p.suname;
+            $('#lblHeading').html("<strong>" + $loginStoreUsername + "</strong>, Make your Entry");
 
+            var masterAccountObjInfo = JSON.parse(app.helper.readObjectFromLocalStorage("accountStoreInfoDatasource"));
+            $storeId = masterAccountObjInfo.storeId;
+            onGetCurrentDayStoreUserEntry();
         };
         var logout = function () {
 
@@ -384,122 +481,3 @@ app.MarkUserEntry = (function () {
     return MarkEntryViewModel;
 
 }());
-
-<div data-role="view" data-title="ETracking Wave" data-layout="ETrackingWaveHomeLayout" data-model="app.MarkUserEntry" data-init="app.MarkUserEntry.init" data-show="app.MarkUserEntry.show">
-    <header data-role="header">
-        <div data-role="navbar">
-           ETracking Wave - Mark Your Entries
-            <a data-role="button" data-rel="modalview" href="#modalview-EntriesDetials" id="modalview-open-button">View Entry</a>
-       </div>
-  </header>
-    <div class="controller-login">
-        <div class="login-logo wagebase"></div>
-        <form>
-            <div class="login-holder">
-                <div class="login-box">
-                    <div class="card-section">
-                        <div class="form-item icon">
-                            <div class="form-text large">
-                                     </div>
-                        </div>
-                        <label class="lblHeading" id="lblHeading">Make your Entry</label><br />
-                        <label class="lblHeading" id="lblDateTime"></label>
-                        <div class="form-joined">
-                            <div class="form-item icon">
-                                <div class="form-text large">
-                                    <a id="btnDayBegin" data-role="button" class="button-kit xlarge green" data-bind="click: onMarkDayBeginEntry">Day Begin</a>
-                                </div>
-                            </div>
-                            <div class="form-item icon">
-                                <div class="form-text large">
-
-                                    <a id="btnBreakBegin" data-role="button" href="#replyBreakEntryOptions" data-rel="actionsheet" class="button-kit xlarge green">Break</a>
-                                    <a id="btnBreakEnd" data-role="button" data-bind="click: onMarkBreakEndEntry" class="hideEntryButtons button-kit xlarge green">Break End</a>
-
-                                </div>
-                                <div class="form-text large">
-                                    <ul data-role="actionsheet" id="replyBreakEntryOptions" data-cancel="Close">
-                                        <li><a data-action="app.MarkUserEntry.onBreakLunchEntryType">Lunch</a></li>
-                                        <li><a data-action="app.MarkUserEntry.onBreakPersonalEntryType">Personal</a></li>
-                                        <li><a data-action="app.MarkUserEntry.onBreakOfficeEntryType">Office Work</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-
-
-                            <div class="form-item icon">
-                                <div class="form-text large">
-                                    <a id="btnDayEnd" data-role="button" class="button-kit xlarge green" data-bind="click: onMarkEndDayEntry">End of Day</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>
-
-
-    <div data-role="modalview" id="modalview-EntriesDetials" style="width: 90%; height: 60%" data-open="app.MarkUserEntry.showUserEntryDetails">
-        <div data-role="header">
-            <div data-role="navbar">
-                <span>Today's Entries</span>
-                <a data-click="closeModalViewLogin" data-role="button" data-align="right">Cancel</a>
-            </div>
-        </div>
-        <div class="divCurrentDayEntries">
-            <ul data-role="listview" id="lmyEntries" data-style="inset"></ul>
-        </div>
-    </div>
-    <script id="myEntriesTemplate" type="text/x-kendo-template">
-        <div class="divEntryRow">
-            # if (EntryType == 'DB'){ #
-                    <div class='rowUserEntryDetail'>
-                        <p class="pRowEntry">
-                           Your Day Started at  #:  kendo.toString(kendo.parseDate(EntryDateTime, 'yyyy-MM-dd HH:MM:SS'), 'HH:MM:ss') #
-                        </p>
-                    </div>
-            # } else if (EntryType == 'DE'){ #
-                   <div class='rowUserEntryDetail'>
-                        <p class="pRowEntry">
-                          You Day Ended at  #:  kendo.toString(kendo.parseDate(EntryDateTime, 'yyyy-MM-dd HH:MM:SS'), 'HH:MM:ss') #
-                        </p>
-                    </div>
-            # } else if (EntryType == 'BE'){ #
-                     <div class='rowUserEntryDetail'>
-                        <p class="pRowEntry">
-                          You have taken Break at  #:  kendo.toString(kendo.parseDate(EntryDateTime, 'yyyy-MM-dd HH:MM:SS'), 'HH:MM:ss') #
-                        </p>
-                    </div>
-             # } else if (EntryType == 'BEnd'){ #
-                     <div class='rowUserEntryDetail'>
-                        <p class="pRowEntry">
-                          You have taken Break at  #:  kendo.toString(kendo.parseDate(EntryDateTime, 'yyyy-MM-dd HH:MM:SS'), 'HH:MM:ss') #
-                        </p>
-                    </div>
-             # } #
-            
-          <!-- #: EntryType #
-           #:  kendo.toString(kendo.parseDate(EntryDateTime, 'yyyy-MM-dd HH:MM:SS'), 'HH:MM:ss') #
-           #:  EntryType # 
-           #:  kendo.toString(kendo.parseDate(EntryDateTime, 'yyyy-MM-dd HH:MM:SS'), 'MM/dd/yyyy') #
-           #:  EntryDateTime #-->
-        </div>
-    </script>
-    <script>
-        function closeModalViewLogin() {
-            $("#modalview-EntriesDetials").kendoMobileModalView("close");
-        }
-    </script>
-</div>
-
-
-.hideEntryButtons {
-    display:none;
-}
-.showEntryButtons {
-    display:block;
-}
-.pRowEntry {
-    padding:0px;margin:0px;
-}
