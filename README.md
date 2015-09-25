@@ -481,3 +481,178 @@ app.MarkUserEntry = (function () {
     return MarkEntryViewModel;
 
 }());
+
+/**
+ * Login view model
+ */
+
+var app = app || {};
+
+app.storeUserAccount = (function () {
+    'use strict';
+    //  var ETrackingWaveApiURL = "http://etrackingwave.webondemo.com/ETrackingWaveApi/EtrackingWave.asmx/";
+    var storeUserAccountViewModel = (function () {
+
+        var $storeUserUserName, $storeUserPassword, $storeUserFullName;
+        var masterAccountStoreId;
+        var init = function () {
+            $storeUserUserName = $('#storeUserUserName');
+            $storeUserPassword = $('#storeUserPassword');
+            $storeUserFullName = $('#storeUserFullName');
+           
+        };
+      
+        var show = function () {
+            $storeUserUserName.val('');
+            $storeUserPassword.val('');
+            $storeUserFullName.val('');
+           
+        };
+
+        // Authenticate to use Backend Services as a particular user
+        var createStoreUserAccount = function () {
+            var username = $storeUserUserName.val();
+            var password = $storeUserPassword.val();
+            var storeUserFullName = $storeUserFullName.val();
+            app.mobileApp.showLoading();
+
+            if (storeUserFullName === "") {
+                app.mobileApp.hideLoading();
+                // navigator.notification.alert("Please Employee Full Name",
+                //   function () { }, "Employee Registration Failed", 'OK');
+                alert("Please Employee Full Name");
+                return;
+            }
+            if (username === "") {
+                app.mobileApp.hideLoading();
+                // navigator.notification.alert("Please enter a Email-Id",
+                //   function () { }, ""Employee Registration Failed", 'OK');
+                alert("Please enter a Email-Id");
+                return;
+            }
+            var validator = $("#storeUserUserName").kendoValidator(
+               {
+                   messages: {
+                       email: "",
+                       //email: "Please enter a valid Email Address" uncomment this only when msg is to be displayed on form
+                   }
+               }
+            ).data("kendoValidator");
+
+            if (!validator.validate()) {
+                app.mobileApp.hideLoading();
+                // navigator.notification.alert("Please enter valid E-mail address",
+                //   function () { }, "Login failed", 'OK');
+                alert("Please enter valid E-mail address");
+                return;
+            }
+
+            if (password === "") {
+                app.mobileApp.hideLoading();
+                // navigator.notification.alert("Please enter both username and password!",
+                //   function () { }, "Employee Registration Failed", 'OK');
+                alert("Please enter a password for your company account");
+                return;
+            }
+
+
+            var masterAccountObjInfo = JSON.parse(app.helper.readObjectFromLocalStorage("accountStoreInfoDatasource"));
+            masterAccountStoreId = masterAccountObjInfo.storeId;
+           // alert(masterAccountStoreId)
+            var isMasterAccountUserLoggedIn = app.helper.readFromLocalStorage("isMasterAccountUserLoggedIn");
+            if (isMasterAccountUserLoggedIn === null || isMasterAccountUserLoggedIn != "true" || masterAccountStoreId === null || masterAccountObjInfo === null) {
+                app.mobileApp.navigate("#ETrackingWaveHomeView");
+            }
+            else {
+               
+                try {
+                   
+                }
+                catch (ex) {
+                    app.mobileApp.hideLoading();
+                    console.log(ex.toString());
+                }
+            }
+
+          
+
+                 
+
+            //var ajaxURL = ETrackingWaveApiURL + "checkStoreAccount";
+            var ajaxURL = app.helper.ETrackingWaveApiURL("checkStoreUserAccountExist");
+            try {
+                $.ajax({
+                    url: ajaxURL,
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    crossDomain: true,
+                    //  data: "{storeUserEmailId:'" + username + "',storeUserPassword:'" + password + "',masterAccountstoreId:'" + masterAccountStoreId + "'}",
+                    data: "{storeUserEmailId:'" + username + "',masterAccountstoreId:'" + masterAccountStoreId + "'}",
+
+                    success: function (result) {
+                        if (result.d.toString() == "true") {
+                            app.mobileApp.hideLoading();
+                            // navigator.notification.alert("User with same account already exist in your account",
+                            //   function () { }, "Employee Registration Failed", 'OK
+                            alert("User with same account already exist in your account");
+                        }
+                        else if (result.d.toString() == "false") {
+                            app.mobileApp.hideLoading();
+                            //alert("You can create account");
+                            /**START of region for creating company account**/
+                            var ajaxURL = app.helper.ETrackingWaveApiURL("createStoreUserAccount");
+                            try {
+                                $.ajax({
+                                    url: ajaxURL,
+                                    type: "POST",
+                                    contentType: "application/json; charset=utf-8",
+                                    dataType: "json",
+                                    crossDomain: true,
+                                    data: "{storeUserEmailId:'" + username + "',storeUserPassword:'" + password + "',storeUserFullName:'" + storeUserFullName + "',masterAccountstoreId:'" + masterAccountStoreId + "'}",
+                                    success: function () {
+                                        app.mobileApp.hideLoading();
+                                        // navigator.notification.alert("Your Company Account created successfully..,Please check your registered inbox for details",
+                                        //   function () { }, "Registered Successfully", 'OK
+                                        alert("Employee Registered Successfully..,Please check your registered inbox for details");
+                                        app.mobileApp.navigate('views/AccountDashboard.html');
+                                    },
+                                    error: function (xhr, ajaxOptions, thrownError) {
+                                        app.mobileApp.hideLoading();
+                                        app.showError("Please check your network connection.")
+                                    }
+                                });
+                            }
+                            catch (ex) {
+                                app.mobileApp.hideLoading();
+                                console.log(ex.toString());
+                            }
+                            /**END region **/
+                        }
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        app.mobileApp.hideLoading();
+                        app.showError("Please check your network connection.")
+                    }
+                });
+            }
+            catch (ex) {
+                app.mobileApp.hideLoading();
+                console.log(ex.toString());
+            }
+        };
+
+   return {
+            init: init,
+            show: show,
+            getYear: app.getYear,
+            createStoreUserAccount: createStoreUserAccount,
+            
+        };
+
+    }());
+
+    return storeUserAccountViewModel;
+
+}());
+
